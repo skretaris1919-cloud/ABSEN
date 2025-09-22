@@ -68,6 +68,7 @@
       margin-top: 12px;
       font-size: 14px;
       color: #0077b6;
+      white-space: pre-wrap;
     }
   </style>
 </head>
@@ -166,27 +167,36 @@
   window.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("form-box").scrollIntoView({ behavior: "smooth" });
 
-    let wa = new URLSearchParams(window.location.search).get("wa") || "";
-    wa = wa.replace(/^\+62/, "628").replace(/[^0-9]/g, "");
-    $("wa").value = wa;
+    try {
+      let wa = new URLSearchParams(window.location.search).get("wa") || "";
+      wa = wa.replace(/^\+62/, "628").replace(/[^0-9]/g, "");
 
-    dataSantri = await ambilDataSantri(wa);
+      const waInput = $("wa");
+      if (waInput) {
+        waInput.value = wa;
+        $("debug-info").textContent = `✅ WA berhasil dimuat dari URL: ${wa}`;
+      } else {
+        $("debug-info").textContent = `❌ Input WA tidak ditemukan di DOM. Pastikan id="wa" ada.`;
+      }
 
-    if (!dataSantri) {
-      $("nama").value = "❌ Tidak ditemukan atau waktu tidak valid";
-      return;
-    }
+      dataSantri = await ambilDataSantri(wa);
 
-    $("nama").value = dataSantri.nama || "—";
-    $("kegiatan").textContent = dataSantri.kegiatan || "—";
-    $("hari").textContent = dataSantri.hari || "—";
-    $("instansi").textContent = dataSantri.instansi || "—";
-    $("jabatan").textContent = dataSantri.jabatan || "—";
-    $("mulai").textContent = dataSantri.mulai || "—";
-    $("selesai").textContent = dataSantri.selesai || "—";
-    $("durasi").textContent = dataSantri.durasi || "—";
-    $("status").textContent = dataSantri.status || "—";
-    $("drs-status").textContent = dataSantri.drsStatus || "—";
+      if (!dataSantri) {
+        $("nama").value = "❌ Tidak ditemukan atau waktu tidak valid";
+        return;
+      }
+
+      $("nama").value = dataSantri.nama || "—";
+      $("kegiatan").textContent = dataSantri.kegiatan || "—";
+      $("hari").textContent = dataSantri.hari || "—";
+      $("instansi").textContent = dataSantri.instansi || "—";
+      $("jabatan").textContent = dataSantri.jabatan || "—";
+      $("mulai").textContent = dataSantri.mulai || "—";
+$("selesai").textContent = dataSantri.selesai || "—";
+$("durasi").textContent = dataSantri.durasi || "—";
+$("status").textContent = dataSantri.status || "—";
+$("drs-status").textContent = dataSantri.drsStatus || "—";
+
   });
 
   $("btn-lokasi").addEventListener("click", async () => {
@@ -197,64 +207,67 @@
 
     $("lokasi-status").textContent = "⏳ Mengambil lokasi...";
 
-navigator.geolocation.getCurrentPosition(async pos => {
-  const userLat = pos.coords.latitude;
-  const userLng = pos.coords.longitude;
-  const akurasi = pos.coords.accuracy;
-  const jarak = hitungJarak(userLat, userLng, pesantrenLat, pesantrenLng);
+    navigator.geolocation.getCurrentPosition(async pos => {
+      const userLat = pos.coords.latitude;
+      const userLng = pos.coords.longitude;
+      const akurasi = pos.coords.accuracy;
+      const jarak = hitungJarak(userLat, userLng, pesantrenLat, pesantrenLng);
 
-  $("debug-info").innerHTML = `
-    📍 Lokasi GPS: ${userLat}, ${userLng}<br>
-    📏 Jarak ke titik: ${jarak.toFixed(2)} meter<br>
-    📍 Akurasi GPS: ${akurasi.toFixed(2)} meter
-  `;
+      $("debug-info").innerHTML += `\n📍 Lokasi GPS: ${userLat}, ${userLng}\n📏 Jarak ke titik: ${jarak.toFixed(2)} meter\n📍 Akurasi GPS: ${akurasi.toFixed(2)} meter`;
 
-  if (jarak > radiusAman || akurasi > 1000) {
-    $("lokasi-status").textContent = "❌ Anda sedang di luar titik koordinat Pesantren Al Falah Kepang.";
-    return;
-  }
+      if (jarak > radiusAman || akurasi > 1000) {
+        $("lokasi-status").textContent = "❌ Anda sedang di luar titik koordinat Pesantren Al Falah Kepang.";
+        return;
+      }
 
-  const tanggal = new Date().toISOString().slice(0, 10);
-  const jam = new Date().toTimeString().slice(0, 8);
+      const tanggal = new Date().toISOString().slice(0, 10);
+      const jam = new Date().toTimeString().slice(0, 8);
 
-  const { data: cek, error: errCek } = await supabase
-    .from("tb_absen")
-    .select("id")
-    .ilike("no_id", dataSantri.no_id)
-    .ilike("tanggal", tanggal)
-    .ilike("kegiatan", dataSantri.kegiatan)
-    .limit(1)
-    .single();
+      const { data: cek, error: errCek } = await supabase
+        .from("tb_absen")
+        .select("id")
+        .ilike("no_id", dataSantri.no_id)
+        .ilike("tanggal", tanggal)
+        .ilike("kegiatan", dataSantri.kegiatan)
+        .limit(1)
+        .single();
 
-  if (cek) {
-    $("lokasi-status").textContent = `⚠️ Anda sudah absen untuk kegiatan ${dataSantri.kegiatan}`;
-    return;
-  }
+      if (cek) {
+        $("lokasi-status").textContent = `⚠️ Anda sudah absen untuk kegiatan ${dataSantri.kegiatan}`;
+        return;
+      }
 
-  const { error: errSimpan } = await supabase
-    .from("tb_absen")
-    .insert([{
-      no_id: dataSantri.no_id,
-      nama: dataSantri.nama,
-      instansi: dataSantri.instansi,
-      jabatan: dataSantri.jabatan,
-      kegiatan: dataSantri.kegiatan,
-      hari: dataSantri.hari,
-      mulai: dataSantri.mulai,
-      selesai: dataSantri.selesai,
-      drs_kegiatan: dataSantri.durasi,
-      status: dataSantri.status,
-      drs_status: dataSantri.drsStatus,
-      tanggal: tanggal,
-      jam_absen: jam
-    }]);
+      const { error: errSimpan } = await supabase
+        .from("tb_absen")
+        .insert([{
+          no_id: dataSantri.no_id,
+          nama: dataSantri.nama,
+          instansi: dataSantri.instansi,
+          jabatan: dataSantri.jabatan,
+          kegiatan: dataSantri.kegiatan,
+          hari: dataSantri.hari,
+          mulai: dataSantri.mulai,
+          selesai: dataSantri.selesai,
+          drs_kegiatan: dataSantri.durasi,
+          status: dataSantri.status,
+          drs_status: dataSantri.drsStatus,
+          tanggal: tanggal,
+          jam_absen: jam
+        }]);
 
-  if (errSimpan) {
-    $("lokasi-status").textContent = "❌ Gagal menyimpan absen.";
-  } else {
-    $("lokasi-status").textContent = `✅ Absen berhasil untuk kegiatan ${dataSantri.kegiatan}`;
-  }
+      if (errSimpan) {
+        $("lokasi-status").textContent = "❌ Gagal menyimpan absen.";
+        $("debug-info").textContent += `\n🛠️ Error simpan: ${errSimpan.message}`;
+      } else {
+        $("lokasi-status").textContent = `✅ Absen berhasil untuk kegiatan ${dataSantri.kegiatan}`;
+      }
 
-}, err => {
-  $("lokasi-status").textContent = "❌ Gagal mengambil lokasi: " + err.message;
-});
+    }, err => {
+      $("lokasi-status").textContent = "❌ Gagal mengambil lokasi: " + err.message;
+      $("debug-info").textContent += `\n🛠️ Geolocation error: ${err.message}`;
+    });
+  });
+</script>
+
+</body>
+</html>
