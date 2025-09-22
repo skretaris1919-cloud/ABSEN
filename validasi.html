@@ -168,16 +168,20 @@
     document.getElementById("form-box").scrollIntoView({ behavior: "smooth" });
 
     try {
-      let wa = new URLSearchParams(window.location.search).get("wa") || "";
-      wa = wa.replace(/^\+62/, "628").replace(/[^0-9]/g, "");
+  let wa = new URLSearchParams(window.location.search).get("wa") || "";
+  wa = wa.replace(/^\+62/, "628").replace(/[^0-9]/g, "");
 
-      const waInput = $("wa");
-      if (waInput) {
-        waInput.value = wa;
-        $("debug-info").textContent = `✅ WA berhasil dimuat dari URL: ${wa}`;
-      } else {
-        $("debug-info").textContent = `❌ Input WA tidak ditemukan di DOM. Pastikan id="wa" ada.`;
-      }
+  const waInput = $("wa");
+  if (waInput) {
+    waInput.value = wa;
+    $("debug-info").textContent = `✅ WA berhasil dimuat dari URL: ${wa}`;
+  } else {
+    $("debug-info").textContent = `❌ Input WA tidak ditemukan di DOM. Pastikan id="wa" ada.`;
+  }
+} catch (err) {
+  $("debug-info").textContent = `❌ Gagal memuat WA: ${err.message}`;
+  console.error("WA Error:", err);
+}
 
       dataSantri = await ambilDataSantri(wa);
 
@@ -271,3 +275,4 @@ $("drs-status").textContent = dataSantri.drsStatus || "—";
 
 </body>
 </html>
+
