@@ -167,7 +167,7 @@
   window.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("form-box").scrollIntoView({ behavior: "smooth" });
 
-    let wa = ""; // ✅ deklarasi di luar try
+    let wa = "";
     try {
       wa = new URLSearchParams(window.location.search).get("wa") || "";
       wa = wa.replace(/^\+62/, "628").replace(/[^0-9]/g, "");
@@ -197,12 +197,11 @@
     $("instansi").textContent = dataSantri.instansi || "—";
     $("jabatan").textContent = dataSantri.jabatan || "—";
     $("mulai").textContent = dataSantri.mulai || "—";
-$("selesai").textContent = dataSantri.selesai || "—";
-$("durasi").textContent = dataSantri.durasi || "—";
-$("status").textContent = dataSantri.status || "—";
-$("drs-status").textContent = dataSantri.drsStatus || "—";
-
-                            });
+    $("selesai").textContent = dataSantri.selesai || "—";
+    $("durasi").textContent = dataSantri.durasi || "—";
+    $("status").textContent = dataSantri.status || "—";
+    $("drs-status").textContent = dataSantri.drsStatus || "—";
+  });
 
   $("btn-lokasi").addEventListener("click", async () => {
     if (!navigator.geolocation) {
@@ -276,4 +275,5 @@ $("drs-status").textContent = dataSantri.drsStatus || "—";
 
 </body>
 </html>
+
 
