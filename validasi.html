@@ -102,7 +102,7 @@
 
   const supabase = createClient(
     'https://brnqpdvtninzyqqwhmfj.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybnFwZHZ0bmluenlxcXdobWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1NjU3OTQsImV4cCI6MjA3MzE0MTc5NH0.6u2P5ANnDV1237hEY73M0OHRDftwc3-G0JbRx44YcZc'
+    'SUPABASE_ANON_KEY'
   );
 
   const $ = id => document.getElementById(id);
@@ -167,41 +167,42 @@
   window.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("form-box").scrollIntoView({ behavior: "smooth" });
 
+    let wa = ""; // ✅ deklarasi di luar try
     try {
-  let wa = new URLSearchParams(window.location.search).get("wa") || "";
-  wa = wa.replace(/^\+62/, "628").replace(/[^0-9]/g, "");
+      wa = new URLSearchParams(window.location.search).get("wa") || "";
+      wa = wa.replace(/^\+62/, "628").replace(/[^0-9]/g, "");
 
-  const waInput = $("wa");
-  if (waInput) {
-    waInput.value = wa;
-    $("debug-info").textContent = `✅ WA berhasil dimuat dari URL: ${wa}`;
-  } else {
-    $("debug-info").textContent = `❌ Input WA tidak ditemukan di DOM. Pastikan id="wa" ada.`;
-  }
-} catch (err) {
-  $("debug-info").textContent = `❌ Gagal memuat WA: ${err.message}`;
-  console.error("WA Error:", err);
-}
-
-      dataSantri = await ambilDataSantri(wa);
-
-      if (!dataSantri) {
-        $("nama").value = "❌ Tidak ditemukan atau waktu tidak valid";
-        return;
+      const waInput = $("wa");
+      if (waInput) {
+        waInput.value = wa;
+        $("debug-info").textContent = `✅ WA berhasil dimuat dari URL: ${wa}`;
+      } else {
+        $("debug-info").textContent = `❌ Input WA tidak ditemukan di DOM. Pastikan id="wa" ada.`;
       }
+    } catch (err) {
+      $("debug-info").textContent = `❌ Gagal memuat WA: ${err.message}`;
+      console.error("WA Error:", err);
+    }
 
-      $("nama").value = dataSantri.nama || "—";
-      $("kegiatan").textContent = dataSantri.kegiatan || "—";
-      $("hari").textContent = dataSantri.hari || "—";
-      $("instansi").textContent = dataSantri.instansi || "—";
-      $("jabatan").textContent = dataSantri.jabatan || "—";
-      $("mulai").textContent = dataSantri.mulai || "—";
+    dataSantri = await ambilDataSantri(wa);
+
+    if (!dataSantri) {
+      $("nama").value = "❌ Tidak ditemukan atau waktu tidak valid";
+      return;
+    }
+
+    $("nama").value = dataSantri.nama || "—";
+    $("kegiatan").textContent = dataSantri.kegiatan || "—";
+    $("hari").textContent = dataSantri.hari || "—";
+    $("instansi").textContent = dataSantri.instansi || "—";
+    $("jabatan").textContent = dataSantri.jabatan || "—";
+    $("mulai").textContent = dataSantri.mulai || "—";
 $("selesai").textContent = dataSantri.selesai || "—";
 $("durasi").textContent = dataSantri.durasi || "—";
 $("status").textContent = dataSantri.status || "—";
 $("drs-status").textContent = dataSantri.drsStatus || "—";
 
-  });
+                            });
 
   $("btn-lokasi").addEventListener("click", async () => {
     if (!navigator.geolocation) {
@@ -275,4 +276,3 @@ $("drs-status").textContent = dataSantri.drsStatus || "—";
 
 </body>
 </html>
-
