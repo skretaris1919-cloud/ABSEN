@@ -130,58 +130,68 @@
     return res.json();
   })
   .then(data => {
-    if (!data || data.length === 0) {
-      $("nama").value = "❌ Kegiatan tidak ditemukan";
-      $("kegiatan").textContent = "—";
-      $("hari").textContent = hariValid;
-      $("instansi").textContent = "—";
-      $("jabatan").textContent = "—";
-      $("mulai").textContent = "—";
-      $("selesai").textContent = "—";
-      $("durasi").textContent = "—";
-      $("status").textContent = "❌ Terlampaui";
-      $("drs-status").textContent = "Sudah lewat lebih dari 30 menit";
-      $("debug-info").textContent += `\n⚠️ Tidak ada kegiatan ditemukan untuk hari ${hariValid} dengan mulai >= ${jamBatas}. Kemungkinan besar jam sudah terlampaui.`;
-      return;
-    }
+  const sekarang = new Date();
+  const batas30MenitLalu = new Date(sekarang.getTime() - 30 * 60 * 1000);
 
-    const jamker = data[0];
-    dataSantri = jamker;
+  $("debug-info").textContent = `⏳ Filter waktu aktif: mulai >= ${batas30MenitLalu.toTimeString().slice(0, 8)}`;
 
-    const mulai = new Date(`${sekarang.toDateString()} ${jamker.mulai}`);
-    const selisihMs = mulai - sekarang;
+  const dataValid = data.find(item => {
+    const mulaiDate = new Date(`${sekarang.toDateString()} ${item.mulai}`);
+    return mulaiDate >= batas30MenitLalu;
+  });
 
-    let status = "—";
-    if (Math.abs(selisihMs) <= 5 * 60 * 1000) {
-      status = "Pas";
-    } else if (selisihMs < 0) {
-      status = "Telat";
-    } else {
-      status = "Maju";
-    }
+  if (!dataValid) {
+    $("nama").value = "❌ Kegiatan tidak ditemukan";
+    $("kegiatan").textContent = "—";
+    $("hari").textContent = hariValid;
+    $("instansi").textContent = "—";
+    $("jabatan").textContent = "—";
+    $("mulai").textContent = "—";
+    $("selesai").textContent = "—";
+    $("durasi").textContent = "—";
+    $("status").textContent = "❌ Terlampaui";
+    $("drs-status").textContent = "Sudah lewat lebih dari 30 menit";
+    $("debug-info").textContent += `\n⚠️ Tidak ada kegiatan ditemukan untuk hari ${hariValid} yang masih aktif. Kemungkinan besar jam sudah terlampaui.`;
+    return;
+  }
 
-    const formatDurasi = ms => {
-      const totalSec = Math.abs(Math.floor(ms / 1000));
-      const jam = Math.floor(totalSec / 3600);
-      const menit = Math.floor((totalSec % 3600) / 60);
-      const detik = totalSec % 60;
-      return `${jam.toString().padStart(2,'0')} Jam ${menit.toString().padStart(2,'0')} Menit ${detik.toString().padStart(2,'0')} Detik`;
-    };
+  const jamker = dataValid;
+  dataSantri = jamker;
 
-    const drsStatus = formatDurasi(selisihMs);
+  const mulai = new Date(`${sekarang.toDateString()} ${jamker.mulai}`);
+  const selisihMs = mulai - sekarang;
 
-    $("nama").value = jamker.nama || "—";
-    $("kegiatan").textContent = jamker.kegiatan || "—";
-    $("hari").textContent = jamker.hari || "—";
-    $("instansi").textContent = jamker.instansi || "—";
-    $("jabatan").textContent = jamker.jabatan || "—";
-    $("mulai").textContent = jamker.mulai || "—";
-    $("selesai").textContent = jamker.selesai || "—";
-    $("durasi").textContent = jamker.durasi || "—";
-    $("status").textContent = status;
-    $("drs-status").textContent = drsStatus;
-    $("debug-info").textContent += `\n✅ Data berhasil dimuat untuk hari ${hariValid}`;
-  })
+  let status = "—";
+  if (Math.abs(selisihMs) <= 5 * 60 * 1000) {
+    status = "Pas";
+  } else if (selisihMs < 0) {
+    status = "Telat";
+  } else {
+    status = "Maju";
+  }
+
+  const formatDurasi = ms => {
+    const totalSec = Math.abs(Math.floor(ms / 1000));
+    const jam = Math.floor(totalSec / 3600);
+    const menit = Math.floor((totalSec % 3600) / 60);
+    const detik = totalSec % 60;
+    return `${jam.toString().padStart(2,'0')} Jam ${menit.toString().padStart(2,'0')} Menit ${detik.toString().padStart(2,'0')} Detik`;
+  };
+
+  const drsStatus = formatDurasi(selisihMs);
+
+  $("nama").value = jamker.nama || "—";
+  $("kegiatan").textContent = jamker.kegiatan || "—";
+  $("hari").textContent = jamker.hari || "—";
+  $("instansi").textContent = jamker.instansi || "—";
+  $("jabatan").textContent = jamker.jabatan || "—";
+  $("mulai").textContent = jamker.mulai || "—";
+  $("selesai").textContent = jamker.selesai || "—";
+  $("durasi").textContent = jamker.durasi || "—";
+  $("status").textContent = status;
+  $("drs-status").textContent = drsStatus;
+  $("debug-info").textContent += `\n✅ Data berhasil difilter dan dimuat untuk hari ${hariValid}`;
+})
   .catch(err => {
     $("debug-info").textContent = `❌ Gagal ambil data: ${err.message}`;
     console.error("❌ Error:", err);
@@ -275,6 +285,7 @@
 </script>
 </body>
 </html>
+
 
 
 
