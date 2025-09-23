@@ -100,13 +100,6 @@
 </div>
 
 <script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-
-  const supabase = createClient(
-    'https://brnqpdvtninzyqqwhmfj.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybnFwZHZ0bmluenlxcXdobWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1NjU3OTQsImV4cCI6MjA3MzE0MTc5NH0.6u2P5ANnDV1237hEY73M0OHRDftwc3-G0JbRx44YcZc'
-  );
-
   const $ = id => document.getElementById(id);
   const pesantrenLat = -7.036533;
   const pesantrenLng = 112.743574;
@@ -141,21 +134,23 @@
     const jamAwal = batasAwal.toTimeString().slice(0, 8);
     const jamSekarang = sekarang.toTimeString().slice(0, 8);
 
-    const { data, error } = await supabase
-      .from("tb_jamker")
-      .select("*")
-      .ilike("wa", `%${wa}%`)
-      .ilike("hari", `%${hariValid}%`)
-      .gte("mulai", jamAwal)
-      .lte("mulai", jamSekarang)
-      .limit(1)
-      .single();
+    const url = `https://brnqpdvtninzyqqwhmfj.supabase.co/rest/v1/tb_jamker?select=*&wa=ilike.%25${wa}%25&hari=ilike.%25${hariValid}%25&mulai=gte.${jamAwal}&mulai=lte.${jamSekarang}&limit=1`;
 
-    if (error || !data) {
-      $("debug-info").textContent += `\n❌ Tidak ditemukan: ${error?.message || 'Data kosong'}`;
+    const response = await fetch(url, {
+      headers: {
+        "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybnFwZHZ0bmluenlxcXdobWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1NjU3OTQsImV4cCI6MjA3MzE0MTc5NH0.6u2P5ANnDV1237hEY73M0OHRDftwc3-G0JbRx44YcZc",
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybnFwZHZ0bmluenlxcXdobWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1NjU3OTQsImV4cCI6MjA3MzE0MTc5NH0.6u2P5ANnDV1237hEY73M0OHRDftwc3-G0JbRx44YcZc",
+        "Accept": "application/json"
+      }
+    });
+
+    const result = await response.json();
+    if (!result || result.length === 0) {
+      $("debug-info").textContent += `\n❌ Tidak ditemukan: Data kosong`;
       return null;
     }
 
+    const data = result[0];
     const mulai = new Date(`${sekarang.toDateString()} ${data.mulai}`);
     const selisihMs = mulai - sekarang;
 
@@ -200,6 +195,7 @@
 
 </body>
 </html>
+
 
 
 
