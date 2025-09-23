@@ -97,13 +97,13 @@
   <div id="debug-info">—</div>
 </div>
 
-<script>
+
 <script>
 // 🔄 BARU: Validasi waktu kegiatan secara numerik agar tidak error
 const $ = id => document.getElementById(id);
 const supabaseHeaders = {
-  apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybnFwZHZ0bmluenlxcXdobWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1NjU3OTQsImV4cCI6MjA3MzE0MTc5NH0.6u2P5ANnDV1237hEY73M0OHRDftwc3-G0JbRx44YcZc",
-  Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybnFwZHZ0bmluenlxcXdobWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1NjU3OTQsImV4cCI6MjA3MzE0MTc5NH0.6u2P5ANnDV1237hEY73M0OHRDftwc3-G0JbRx44YcZc",
+  apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "Content-Type": "application/json"
 };
 
@@ -124,23 +124,20 @@ const url = `https://brnqpdvtninzyqqwhmfj.supabase.co/rest/v1/tb_jamker?select=*
 $("debug-info").textContent = `⏳ Filter waktu aktif: mulai >= ${jamBatas}`;
 
 fetch(url, { method: "GET", headers: supabaseHeaders })
-  .then(res => {
+  .then(async res => {
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status} - ${res.statusText}`);
+      const text = await res.text();
+      throw new Error(`HTTP ${res.status} - ${res.statusText}\n${text.slice(0, 100)}...`);
     }
     return res.json();
   })
   .then(data => {
-    if (!Array.isArray(data)) {
-      throw new Error("Data bukan array, tidak bisa pakai .find()");
-    }
+    if (!Array.isArray(data)) throw new Error("Data bukan array");
 
-    // lanjutkan proses seperti biasa...
-  })
-  .catch(err => {
-    $("debug-info").textContent = `❌ Gagal ambil data: ${err.message}`;
-    console.error("❌ Error:", err);
-  });
+    const dataValid = data.find(item => {
+      const mulaiDate = new Date(`${sekarang.toDateString()} ${item.mulai}`);
+      return mulaiDate >= batas30MenitLalu;
+    });
 
     if (!dataValid) {
       $("nama").value = "❌ Kegiatan tidak ditemukan";
@@ -278,15 +275,15 @@ $("btn-lokasi").addEventListener("click", async () => {
       const err = await simpanRes.json();
       $("lokasi-status").textContent = "❌ Gagal simpan absen.";
       $("debug-info").textContent += `\n🛠️ Error simpan: ${err.message || JSON.stringify(err)}`;
-          }
+    }
   }, err => {
     $("lokasi-status").textContent = "❌ Gagal ambil lokasi: " + err.message;
     $("debug-info").textContent += `\n🛠️ Geolocation error: ${err.message}`;
   });
 });
 </script>
-</body>
 </html>
+
 
 
 
