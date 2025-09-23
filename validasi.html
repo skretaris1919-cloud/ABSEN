@@ -147,11 +147,10 @@ const { data, error } = await supabase
   .select("*")
   .ilike("wa", wa)
   .ilike("hari", hariValid)
-  .gte("mulai", jamAwal)      // "16:25:22"
-  .lte("mulai", jamSekarang)  // "16:55:22"
+  .gte("mulai", "16:28:13")
+  .lte("mulai", "16:58:13")
   .limit(1)
   .single();
-
     if (error || !data) return null;
 
     const mulai = new Date(`${sekarang.toDateString()} ${data.mulai}`);
@@ -279,6 +278,7 @@ const { data, error } = await supabase
 
 </body>
 </html>
+
 
 
 
