@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Validasi Jam Kerja</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="data:,">
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -149,25 +150,24 @@
       .limit(1)
       .single();
 
-    if (error || !data) return null;
+    if (error || !data) {
+      $("debug-info").textContent += `\n❌ Tidak ditemukan: ${error?.message || 'Data kosong'}`;
+      return null;
+    }
 
     const mulai = new Date(`${sekarang.toDateString()} ${data.mulai}`);
     const selisihMs = mulai - sekarang;
 
     let status = "—";
-    if (Math.abs(selisihMs) <= 5 * 60 * 1000) {
-      status = "Pas";
-    } else if (selisihMs < 0) {
-      status = "Telat";
-    } else {
-      status = "Maju";
-    }
+    if (Math.abs(selisihMs) <= 5 * 60 * 1000) status = "Pas";
+    else if (selisihMs < 0) status = "Telat";
+    else status = "Maju";
 
     const drsStatus = formatDurasi(selisihMs);
     return { ...data, status, drsStatus };
   }
 
-  window.addEventListener("DOMContentLoaded", async () => {
+   window.addEventListener("DOMContentLoaded", async () => {
     $("form-box").scrollIntoView({ behavior: "smooth" });
 
     let wa = new URLSearchParams(window.location.search).get("wa") || "";
@@ -180,6 +180,7 @@
 
     if (!dataSantri) {
       $("nama").value = "❌ Tidak ditemukan atau waktu tidak valid";
+      $("debug-info").textContent += `\n🛠️ Tidak ada data cocok untuk WA ${wa} di hari dan jam ini.`;
       return;
     }
 
@@ -194,79 +195,7 @@
     $("status").textContent = dataSantri.status || "—";
     $("drs-status").textContent = dataSantri.drsStatus || "—";
   });
-
-  $("btn-lokasi").addEventListener("click", async () => {
-    if (!navigator.geolocation) {
-      $("lokasi-status").textContent = "❌ Browser tidak mendukung pelacakan lokasi.";
-      return;
-    }
-
-    $("lokasi-status").textContent = "⏳ Mengambil lokasi...";
-
-    navigator.geolocation.getCurrentPosition(async pos => {
-      const userLat = pos.coords.latitude;
-      const userLng = pos.coords.longitude;
-      const akurasi = pos.coords.accuracy;
-      const jarak = hitungJarak(userLat, userLng, pesantrenLat, pesantrenLng);
-
-      $("debug-info").innerHTML += `\n📍 Lokasi GPS: ${userLat}, ${userLng}\n📏 Jarak ke titik: ${jarak.toFixed(2)} meter\n📍 Akurasi GPS: ${akurasi.toFixed(2)} meter`;
-
-      if (jarak > radiusAman || akurasi > 1000) {
-        $("lokasi-status").textContent = "❌ Anda sedang di luar titik koordinat Pesantren Al Falah Kepang.";
-        return;
-      }
-
-      const tanggal = new Date().toISOString().slice(0, 10);
-      const jam = new Date().toTimeString().slice(0, 8);
-
-      const { data: cek } = await supabase
-        .from("tb_absen")
-        .select("id")
-        .ilike("no_id", `%${dataSantri.no_id}%`)
-        .ilike("tanggal", `%${tanggal}%`)
-        .ilike("kegiatan", `%${dataSantri.kegiatan}%`)
-        .limit(1)
-        .single();
-
-      if (cek) {
-        $("lokasi-status").textContent = `⚠️ Anda sudah absen untuk kegiatan ${dataSantri.kegiatan}`;
-        return;
-      }
-
-      const { error: errSimpan } = await supabase
-        .from("tb_absen")
-        .insert([{
-          no_id: dataSantri.no_id,
-          nama: dataSantri.nama,
-          instansi: dataSantri.instansi,
-          jabatan: dataSantri.jabatan,
-          kegiatan: dataSantri.kegiatan,
-          hari: dataSantri.hari,
-          mulai: dataSantri.mulai,
-          selesai: dataSantri.selesai,
-          drs_kegiatan: dataSantri.durasi,
-          status: dataSantri.status,
-          drs_status: dataSantri.drsStatus,
-          tanggal: tanggal,
-          jam_absen: jam
-        }]);
-
-      if (errSimpan) {
-        $("lokasi-status").textContent = "❌ Gagal menyimpan absen.";
-        $("debug-info").textContent += `\n🛠️ Error simpan: ${errSimpan.message}`;
-      } else {
-        $("lokasi-status").textContent = `✅ Absen berhasil untuk kegiatan ${dataSantri.kegiatan}`;
-      }
-
-    }, err => {
-      $("lokasi-status").textContent = "❌ Gagal mengambil lokasi: " + err.message;
-      $("debug-info").textContent += `\n🛠️ Geolocation error: ${err.message}`;
-    });
-  });
 </script>
+
 </body>
 </html>
-
-
-
-
