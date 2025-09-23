@@ -4,105 +4,7 @@
   <meta charset="UTF-8" />
   <title>Validasi Jam Kerja</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f0f4f8;
-      margin: 0;
-      padding: 0;
-    }
-    .form-box {
-      background-color: #fff;
-      padding: 16px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      max-width: 420px;
-      margin: 24px auto;
-      box-sizing: border-box;
-    }
-    input {
-      width: 100%;
-      padding: 12px;
-      font-size: 16px;
-      margin-bottom: 12px;
-      border-radius: 8px;
-      border: 1px solid #0077b6;
-      background-color: #d0ecff;
-      color: #0077b6;
-      font-weight: bold;
-      box-sizing: border-box;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    .label {
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 2px;
-    }
-    .value {
-      font-size: 14px;
-      font-weight: bold;
-      background-color: #eef6fb;
-      padding: 6px;
-      border-radius: 6px;
-      color: #0077b6;
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      font-size: 16px;
-      margin-top: 16px;
-      border-radius: 8px;
-      border: none;
-      background-color: #a8f0c6;
-      color: #006644;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    #lokasi-status, #debug-info {
-      font-weight: bold;
-      text-align: center;
-      margin-top: 12px;
-      font-size: 14px;
-      color: #0077b6;
-      white-space: pre-wrap;
-    }
-  </style>
-</head>
-<body>
-
-<div class="form-box" id="form-box">
-  <h2 style="text-align:center; color:#0077b6;">✅ Validasi Jam Kerja</h2>
-
-  <input type="text" id="nama" placeholder="Nama Santri" readonly />
-  <input type="text" id="wa" placeholder="Nomor WA" readonly />
-
-  <div class="grid">
-    <div><div class="label">Kegiatan</div><div class="value" id="kegiatan">—</div></div>
-    <div><div class="label">Hari</div><div class="value" id="hari">—</div></div>
-    <div><div class="label">Instansi</div><div class="value" id="instansi">—</div></div>
-    <div><div class="label">Jabatan</div><div class="value" id="jabatan">—</div></div>
-    <div><div class="label">Mulai</div><div class="value" id="mulai">—</div></div>
-    <div><div class="label">Selesai</div><div class="value" id="selesai">—</div></div>
-    <div><div class="label">Durasi</div><div class="value" id="durasi">—</div></div>
-    <div><div class="label">Status</div><div class="value" id="status">—</div></div>
-    <div><div class="label">Durasi Status</div><div class="value" id="drs-status">—</div></div>
-  </div>
-
-  <button id="btn-lokasi">🔐 Validasi Lokasi & Absen</button>
-  <div id="lokasi-status">—</div>
-  <div id="debug-info">—</div>
-</div>
-
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <title>Validasi Jam Kerja</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="data:,"> <!-- Hindari error favicon 404 -->
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -377,4 +279,5 @@
 
 </body>
 </html>
+
 
