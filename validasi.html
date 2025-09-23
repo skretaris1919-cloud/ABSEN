@@ -140,15 +140,15 @@
     const jamAwal = batasAwal.toTimeString().slice(0, 8);
     const jamSekarang = sekarang.toTimeString().slice(0, 8);
 
-    const { data, error } = await supabase
-      .from("tb_jamker")
-      .select("*")
-      .ilike("wa", `%${wa}%`)
-      .ilike("hari", `%${hariValid}%`)
-      .gte("mulai", jamAwal)
-      .lte("mulai", jamSekarang)
-      .limit(1)
-      .single();
+const { data, error } = await supabase
+  .from("tb_jamker")
+  .select("*")
+  .ilike("wa", `%${wa}%`)
+  .ilike("hari", `%${hariValid}%`)
+  .gte("mulai", jamAwal)
+  .lte("mulai", jamSekarang)
+  .limit(1)
+  .single();
 
     if (error || !data) {
       $("debug-info").textContent += `\n❌ Tidak ditemukan: ${error?.message || 'Data kosong'}`;
@@ -199,3 +199,4 @@
 
 </body>
 </html>
+
