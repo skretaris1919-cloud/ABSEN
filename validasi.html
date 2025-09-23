@@ -147,8 +147,8 @@ const { data, error } = await supabase
   .select("*")
   .ilike("wa", wa)
   .ilike("hari", hariValid)
-  .gte("mulai", "16:28:13")
-  .lte("mulai", "16:58:13")
+  .gte("mulai", "16:29:27")
+  .lte("mulai", "16:59:27")
   .limit(1)
   .single();
     if (error || !data) return null;
@@ -278,6 +278,7 @@ const { data, error } = await supabase
 
 </body>
 </html>
+
 
 
 
