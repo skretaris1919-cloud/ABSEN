@@ -108,6 +108,8 @@ fetch(url, {
     Accept: 'application/json'
   }
 })
+
+
 .then(res => res.json())
 .then(data => console.log(data))
 .catch(err => console.error("❌ Error:", err));
@@ -197,5 +199,6 @@ const { data, error } = await supabase
 
 </body>
 </html>
+
 
 
