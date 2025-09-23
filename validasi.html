@@ -136,23 +136,17 @@
     const hariSekarang = new Intl.DateTimeFormat("id-ID", { weekday: "long" }).format(new Date()).toUpperCase();
     const hariValid = (hariMap[hariSekarang] || hariSekarang).toUpperCase();
 
-    const sekarang = new Date();
-    const batasAwal = new Date(sekarang.getTime() - 30 * 60 * 1000); // 30 menit sebelum sekarang
-    const jamAwal = batasAwal.toTimeString().slice(0, 8);
-    const jamSekarang = sekarang.toTimeString().slice(0, 8);
-
     const { data, error } = await supabase
       .from("tb_jamker")
       .select("*")
       .ilike("wa", wa)
       .ilike("hari", hariValid)
-      .gte("mulai", jamAwal)
-      .lte("mulai", jamSekarang)
       .limit(1)
       .single();
 
     if (error || !data) return null;
 
+    const sekarang = new Date();
     const mulai = new Date(`${sekarang.toDateString()} ${data.mulai}`);
     const selisihMs = mulai - sekarang;
 
@@ -173,34 +167,40 @@
   window.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("form-box").scrollIntoView({ behavior: "smooth" });
 
-    let wa = new URLSearchParams(window.location.search).get("wa") || "";
-    wa = wa.replace(/^\+62/, "628").replace(/[^0-9]/g, "");
+    try {
+  let wa = new URLSearchParams(window.location.search).get("wa") || "";
+  wa = wa.replace(/^\+62/, "628").replace(/[^0-9]/g, "");
 
-    const waInput = $("wa");
-    if (waInput) {
-      waInput.value = wa;
-      $("debug-info").textContent = `✅ WA berhasil dimuat dari URL: ${wa}`;
-    } else {
-      $("debug-info").textContent = `❌ Input WA tidak ditemukan di DOM. Pastikan id="wa" ada.`;
-    }
+  const waInput = $("wa");
+  if (waInput) {
+    waInput.value = wa;
+    $("debug-info").textContent = `✅ WA berhasil dimuat dari URL: ${wa}`;
+  } else {
+    $("debug-info").textContent = `❌ Input WA tidak ditemukan di DOM. Pastikan id="wa" ada.`;
+  }
+} catch (err) {
+  $("debug-info").textContent = `❌ Gagal memuat WA: ${err.message}`;
+  console.error("WA Error:", err);
+}
 
-    dataSantri = await ambilDataSantri(wa);
+      dataSantri = await ambilDataSantri(wa);
 
-    if (!dataSantri) {
-      $("nama").value = "❌ Tidak ditemukan atau waktu tidak valid";
-      return;
-    }
+      if (!dataSantri) {
+        $("nama").value = "❌ Tidak ditemukan atau waktu tidak valid";
+        return;
+      }
 
-    $("nama").value = dataSantri.nama || "—";
-    $("kegiatan").textContent = dataSantri.kegiatan || "—";
-    $("hari").textContent = dataSantri.hari || "—";
-    $("instansi").textContent = dataSantri.instansi || "—";
-    $("jabatan").textContent = dataSantri.jabatan || "—";
-    $("mulai").textContent = dataSantri.mulai || "—";
-    $("selesai").textContent = dataSantri.selesai || "—";
-    $("durasi").textContent = dataSantri.durasi || "—";
-    $("status").textContent = dataSantri.status || "—";
-    $("drs-status").textContent = dataSantri.drsStatus || "—";
+      $("nama").value = dataSantri.nama || "—";
+      $("kegiatan").textContent = dataSantri.kegiatan || "—";
+      $("hari").textContent = dataSantri.hari || "—";
+      $("instansi").textContent = dataSantri.instansi || "—";
+      $("jabatan").textContent = dataSantri.jabatan || "—";
+      $("mulai").textContent = dataSantri.mulai || "—";
+$("selesai").textContent = dataSantri.selesai || "—";
+$("durasi").textContent = dataSantri.durasi || "—";
+$("status").textContent = dataSantri.status || "—";
+$("drs-status").textContent = dataSantri.drsStatus || "—";
+
   });
 
   $("btn-lokasi").addEventListener("click", async () => {
