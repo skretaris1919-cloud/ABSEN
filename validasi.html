@@ -123,21 +123,29 @@ const url = `https://brnqpdvtninzyqqwhmfj.supabase.co/rest/v1/tb_jamker?select=*
 
 $("debug-info").textContent = `⏳ Filter waktu aktif: mulai >= ${jamBatas}`;
 
+  // 🔍 Audit URL dan Header sebelum fetch
+console.log("URL:", url);
+console.log("Headers:", supabaseHeaders);
+
+
 fetch(url, { method: "GET", headers: supabaseHeaders })
   .then(async res => {
-    if (!res.ok) {
+    const contentType = res.headers.get("content-type") || "";
+    if (!res.ok || !contentType.includes("application/json")) {
       const text = await res.text();
-      throw new Error(`HTTP ${res.status} - ${res.statusText}\n${text.slice(0, 100)}...`);
+      throw new Error(`HTTP ${res.status} - ${res.statusText}\nIsi respons:\n${text.slice(0, 100)}...`);
     }
     return res.json();
   })
   .then(data => {
     if (!Array.isArray(data)) throw new Error("Data bukan array");
 
-    const dataValid = data.find(item => {
-      const mulaiDate = new Date(`${sekarang.toDateString()} ${item.mulai}`);
-      return mulaiDate >= batas30MenitLalu;
-    });
+    // lanjutkan proses seperti biasa...
+  })
+  .catch(err => {
+    $("debug-info").textContent = `❌ Gagal ambil data: ${err.message}`;
+    console.error("❌ Error:", err);
+  });
 
     if (!dataValid) {
       $("nama").value = "❌ Kegiatan tidak ditemukan";
@@ -283,6 +291,7 @@ $("btn-lokasi").addEventListener("click", async () => {
 });
 </script>
 </html>
+
 
 
 
