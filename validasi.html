@@ -117,14 +117,6 @@
     return R * c;
   }
 
-  function formatDurasi(ms) {
-    const totalSec = Math.abs(Math.floor(ms / 1000));
-    const jam = Math.floor(totalSec / 3600);
-    const menit = Math.floor((totalSec % 3600) / 60);
-    const detik = totalSec % 60;
-    return `${jam.toString().padStart(2,'0')} Jam ${menit.toString().padStart(2,'0')} Menit ${detik.toString().padStart(2,'0')} Detik`;
-  }
-
   async function ambilDataSantri(wa) {
     const hariMap = { "MINGGU": "AHAD", "JUMAT": "JUM'AT" };
     const hariSekarang = new Intl.DateTimeFormat("id-ID", { weekday: "long" }).format(new Date()).toUpperCase();
@@ -137,69 +129,123 @@
 
     const url = `https://brnqpdvtninzyqqwhmfj.supabase.co/rest/v1/tb_jamker?select=*&wa=ilike.%25${wa}%25&hari=ilike.%25${hariValid}%25&mulai=gte.${jamAwal}&mulai=lte.${jamSekarang}&limit=1`;
 
-    $("debug-info").textContent += `\n🔍 Query URL:\n${url}\n🕒 Rentang waktu: ${jamAwal} → ${jamSekarang}\n📅 Hari: ${hariValid}`;
+    $("debug-info").textContent += `\n🔍 Query Jamker:\n${url}`;
 
     const response = await fetch(url, {
       headers: {
-        "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybnFwZHZ0bmluenlxcXdobWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1NjU3OTQsImV4cCI6MjA3MzE0MTc5NH0.6u2P5ANnDV1237hEY73M0OHRDftwc3-G0JbRx44YcZc",
-        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybnFwZHZ0bmluenlxcXdobWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1NjU3OTQsImV4cCI6MjA3MzE0MTc5NH0.6u2P5ANnDV1237hEY73M0OHRDftwc3-G0JbRx44YcZc",
+        "apikey": "API_KEY",
+        "Authorization": "Bearer API_KEY",
         "Accept": "application/json"
       }
     });
 
     const result = await response.json();
-    $("debug-info").textContent += `\n📦 Response: ${JSON.stringify(result)}`;
+    $("debug-info").textContent += `\n📦 Jamker Response: ${JSON.stringify(result)}`;
 
-    if (!result || result.length === 0) {
-      $("debug-info").textContent += `\n❌ Tidak ditemukan: Data kosong`;
-      return null;
-    }
+    if (!result || result.length === 0) return null;
 
     const data = result[0];
-    const mulai = new Date(`${sekarang.toDateString()} ${data.mulai}`);
-    const selisihMs = mulai - sekarang;
-
-    let status = "—";
-    if (Math.abs(selisihMs) <= 5 * 60 * 1000) status = "Pas";
-    else if (selisihMs < 0) status = "Telat";
-    else status = "Maju";
-
-    const drsStatus = formatDurasi(selisihMs);
-    return { ...data, status, drsStatus };
+    return { ...data };
   }
 
-  window.addEventListener("DOMContentLoaded", async () => {
-    $("form-box").scrollIntoView({ behavior: "smooth" });
+  async function sudahAbsen(wa, kegiatan) {
+    const tanggal = new Date().toISOString().slice(0, 10);
+    const url = `https://brnqpdvtninzyqqwhmfj.supabase.co/rest/v1/tb_absen?select=id&wa=eq.${wa}&kegiatan=eq.${kegiatan}&tanggal=eq.${tanggal}`;
 
-    let wa = new URLSearchParams(window.location.search).get("wa") || "";
-    wa = wa.replace(/^\+62/, "628").replace(/[^0-9]/g, "");
+    $("debug-info").textContent += `\n🔍 Query Absen:\n${url}`;
 
-    $("wa").value = wa;
-    $("debug-info").textContent = `✅ WA berhasil dimuat dari URL: ${wa}`;
+    const response = await fetch(url, {
+      headers: {
+        "apikey": "API_KEY",
+        "Authorization": "Bearer API_KEY",
+        "Accept": "application/json"
+      }
+    });
 
+    const result = await response.json();
+    $("debug-info").textContent += `\n📦 Absen Response: ${JSON.stringify(result)}`;
+
+    return result.length > 0;
+  }
+
+  async function simpanAbsen(data, lat, lng) {
+    const payload = {
+      wa: data.wa,
+      nama: data.nama,
+      kegiatan: data.kegiatan,
+      hari: data.hari,
+      instansi: data.instansi,
+      jabatan: data.jabatan,
+      mulai: data.mulai,
+      selesai: data.selesai,
+      durasi: data.durasi,
+      status: data.status,
+      drs_status: data.drsStatus,
+      lat: lat,
+      lng: lng,
+      tanggal: new Date().toISOString().slice(0, 10),
+      jam: new Date().toTimeString().slice(0, 8)
+    };
+
+    const response = await fetch("https://brnqpdvtninzyqqwhmfj.supabase.co/rest/v1/tb_absen", {
+      method: "POST",
+      headers: {
+        "apikey": "API_KEY",
+        "Authorization": "Bearer API_KEY",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+    $("debug-info").textContent += `\n📥 Simpan Absen Response: ${JSON.stringify(result)}`;
+  }
+
+  async function prosesAbsen(wa) {
     dataSantri = await ambilDataSantri(wa);
-
     if (!dataSantri) {
-      $("nama").value = "❌ Tidak ditemukan atau waktu tidak valid";
-      $("debug-info").textContent += `\n🛠️ Tidak ada data cocok untuk WA ${wa} di hari dan jam ini.`;
+      $("debug-info").textContent += `\n❌ Tidak ditemukan di jam kerja aktif`;
       return;
     }
 
-    $("nama").value = dataSantri.nama || "—";
-    $("kegiatan").textContent = dataSantri.kegiatan || "—";
-    $("hari").textContent = dataSantri.hari || "—";
-    $("instansi").textContent = dataSantri.instansi || "—";
-    $("jabatan").textContent = dataSantri.jabatan || "—";
-    $("mulai").textContent = dataSantri.mulai || "—";
-    $("selesai").textContent = dataSantri.selesai || "—";
-    $("durasi").textContent = dataSantri.durasi || "—";
-    $("status").textContent = dataSantri.status || "—";
-    $("drs-status").textContent = dataSantri.drsStatus || "—";
+    if (await sudahAbsen(wa, dataSantri.kegiatan)) {
+      $("debug-info").textContent += `\n⚠️ Sudah absen sebelumnya`;
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(async pos => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const jarak = hitungJarak(lat, lng, pesantrenLat, pesantrenLng);
+
+      $("debug-info").textContent += `\n📍 Lokasi: ${lat}, ${lng}\n📏 Jarak ke pesantren: ${Math.round(jarak)} meter`;
+
+      if (jarak > radiusAman) {
+        $("debug-info").textContent += `\n🚫 Di luar radius aman (${radiusAman}m)`;
+        return;
+      }
+
+      await simpanAbsen(dataSantri, lat, lng);
+      $("debug-info").textContent += `\n✅ Absen berhasil disimpan`;
+    }, err => {
+      $("debug-info").textContent += `\n❌ Gagal ambil lokasi: ${err.message}`;
+    });
+  }
+
+  window.addEventListener("DOMContentLoaded", async () => {
+    let wa = new URLSearchParams(window.location.search).get("wa") || "";
+    wa = wa.replace(/^\+62/, "628").replace(/[^0-9]/g, "");
+    $("wa").value = wa;
+    $("debug-info").textContent = `✅ WA dimuat: ${wa}`;
+
+    $("btn-absen").addEventListener("click", () => prosesAbsen(wa));
   });
 </script>
 
 </body>
 </html>
+
 
 
 
