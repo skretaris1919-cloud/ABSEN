@@ -99,12 +99,18 @@
 </div>
 
 <script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+const url = `https://brnqpdvtninzyqqwhmfj.supabase.co/rest/v1/tb_jamker?select=*&wa=ilike.62895403152519&hari=ilike.SELASA&and=(mulai.gte.16:52:03,mulai.lte.17:22:03)&limit=1`;
 
-  const supabase = createClient(
-    'https://brnqpdvtninzyqqwhmfj.supabase.co',
-    'YOUR_PUBLIC_ANON_KEY'
-  );
+fetch(url, {
+  headers: {
+    apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybnFwZHZ0bmluenlxcXdobWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1NjU3OTQsImV4cCI6MjA3MzE0MTc5NH0.6u2P5ANnDV1237hEY73M0OHRDftwc3-G0JbRx44YcZc',
+    Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybnFwZHZ0bmluenlxcXdobWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1NjU3OTQsImV4cCI6MjA3MzE0MTc5NH0.6u2P5ANnDV1237hEY73M0OHRDftwc3-G0JbRx44YcZc',
+    Accept: 'application/json'
+  }
+})
+.then(res => res.json())
+.then(data => console.log(data))
+.catch(err => console.error("❌ Error:", err));
 
   const $ = id => document.getElementById(id);
   const pesantrenLat = -7.036533;
@@ -191,4 +197,5 @@ const { data, error } = await supabase
 
 </body>
 </html>
+
 
