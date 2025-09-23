@@ -125,11 +125,7 @@
     method: "GET",
     headers: supabaseHeaders
   })
-  .then(res => {
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.json();
-  })
-.then(data => {
+ .then(data => {
   const sekarang = new Date();
   const batas30MenitLalu = new Date(sekarang.getTime() - 30 * 60 * 1000);
 
@@ -192,7 +188,6 @@
   $("drs-status").textContent = drsStatus;
   $("debug-info").textContent += `\n✅ Data berhasil difilter dan dimuat untuk hari ${hariValid}`;
 })
-
   const pesantrenLat = -7.037695;
   const pesantrenLng = 112.747255;
   const radiusAman = 120;
@@ -281,6 +276,7 @@
 </script>
 </body>
 </html>
+
 
 
 
