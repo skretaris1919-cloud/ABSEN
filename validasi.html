@@ -180,7 +180,7 @@
 
     dataSantri = await ambilDataSantri(wa);
     if (!dataSantri) {
-      $("nama").value = "❌ Tidak ditemukan atau waktu tidak valid";
+      $("nama").value = "❌ Tidak ditemukan atau kegiatan sudan melampaui 30 menit";
       return;
     }
 
@@ -198,7 +198,7 @@
 
   $("btn-lokasi").addEventListener("click", async () => {
     if (!navigator.geolocation) {
-      $("lokasi-status").textContent = "❌ Browser tidak mendukung pelacakan lokasi.";
+      $("lokasi-status").textContent = "❌ Browser tidak mendukung pelacakan lokas.";
       return;
     }
 
@@ -270,6 +270,7 @@
 </script>
 </body>
 </html>
+
 
 
 
