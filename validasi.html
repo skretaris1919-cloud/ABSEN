@@ -138,21 +138,30 @@ async function ambilDataSantri(wa) {
   const sekarang = new Date();
   const batasAwal = new Date(sekarang.getTime() - 30 * 60 * 1000); // 30 menit sebelumnya
 
+  // Ambil semua data yang cocok dengan WA dan hari
   const { data, error } = await supabase
     .from("tb_jamker")
     .select("*")
     .ilike("wa", `%${wa}%`)
     .ilike("hari", `%${hariValid}%`);
 
-  if (error || !data || data.length === 0) return null;
+  if (error || !data || data.length === 0) {
+    $("debug-info").textContent += `\n❌ Tidak ada data jam kerja cocok: ${error?.message || "Kosong"}`;
+    return null;
+  }
 
+  // Filter manual berdasarkan waktu
   const hasilValid = data.find(row => {
     const jamMulai = new Date(`${sekarang.toDateString()} ${row.mulai}`);
     return jamMulai >= batasAwal && jamMulai <= sekarang;
   });
 
-  if (!hasilValid) return null;
+  if (!hasilValid) {
+    $("debug-info").textContent += `\n⚠️ Tidak ada jam kerja dalam 30 menit terakhir`;
+    return null;
+  }
 
+  // Hitung status waktu
   const mulai = new Date(`${sekarang.toDateString()} ${hasilValid.mulai}`);
   const selisihMs = mulai - sekarang;
 
@@ -162,6 +171,9 @@ async function ambilDataSantri(wa) {
   else status = "Maju";
 
   const drsStatus = formatDurasi(selisihMs);
+
+  $("debug-info").textContent += `\n✅ Jam kerja valid ditemukan: ${hasilValid.mulai} → Status: ${status}`;
+
   return { ...hasilValid, status, drsStatus };
 }
 
@@ -263,4 +275,5 @@ async function ambilDataSantri(wa) {
 </script>
 </body>
 </html>
+
 
