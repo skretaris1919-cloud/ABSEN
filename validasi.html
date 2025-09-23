@@ -136,6 +136,8 @@
 
     const url = `https://brnqpdvtninzyqqwhmfj.supabase.co/rest/v1/tb_jamker?select=*&wa=ilike.%25${wa}%25&hari=ilike.%25${hariValid}%25&mulai=gte.${jamAwal}&mulai=lte.${jamSekarang}&limit=1`;
 
+    $("debug-info").textContent += `\n🔍 Query URL:\n${url}\n🕒 Rentang waktu: ${jamAwal} → ${jamSekarang}\n📅 Hari: ${hariValid}`;
+
     const response = await fetch(url, {
       headers: {
         "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybnFwZHZ0bmluenlxcXdobWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1NjU3OTQsImV4cCI6MjA3MzE0MTc5NH0.6u2P5ANnDV1237hEY73M0OHRDftwc3-G0JbRx44YcZc",
@@ -145,6 +147,8 @@
     });
 
     const result = await response.json();
+    $("debug-info").textContent += `\n📦 Response: ${JSON.stringify(result)}`;
+
     if (!result || result.length === 0) {
       $("debug-info").textContent += `\n❌ Tidak ditemukan: Data kosong`;
       return null;
@@ -195,6 +199,7 @@
 
 </body>
 </html>
+
 
 
 
