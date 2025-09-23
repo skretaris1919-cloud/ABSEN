@@ -203,17 +203,20 @@
   }
 
   async function prosesAbsen(wa) {
+    $("lokasi-status").textContent = "⏳ Validasi jam kerja...";
     dataSantri = await ambilDataSantri(wa);
     if (!dataSantri) {
-      $("debug-info").textContent += `\n❌ Tidak ditemukan di jam kerja aktif`;
+      $("lokasi-status").textContent = "❌ Tidak ditemukan di jam kerja aktif";
       return;
     }
 
+    $("lokasi-status").textContent = "⏳ Cek apakah sudah absen...";
     if (await sudahAbsen(wa, dataSantri.kegiatan)) {
-      $("debug-info").textContent += `\n⚠️ Sudah absen sebelumnya`;
+      $("lokasi-status").textContent = "⚠️ Sudah absen sebelumnya";
       return;
     }
 
+    $("lokasi-status").textContent = "📍 Mengambil lokasi...";
     navigator.geolocation.getCurrentPosition(async pos => {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
@@ -222,29 +225,30 @@
       $("debug-info").textContent += `\n📍 Lokasi: ${lat}, ${lng}\n📏 Jarak ke pesantren: ${Math.round(jarak)} meter`;
 
       if (jarak > radiusAman) {
-        $("debug-info").textContent += `\n🚫 Di luar radius aman (${radiusAman}m)`;
+        $("lokasi-status").textContent = `🚫 Di luar radius aman (${Math.round(jarak)}m)`;
         return;
       }
 
+      $("lokasi-status").textContent = "✅ Lokasi valid, menyimpan absen...";
       await simpanAbsen(dataSantri, lat, lng);
-      $("debug-info").textContent += `\n✅ Absen berhasil disimpan`;
+      $("lokasi-status").textContent = "✅ Absen berhasil disimpan";
     }, err => {
-      $("debug-info").textContent += `\n❌ Gagal ambil lokasi: ${err.message}`;
+      $("lokasi-status").textContent = `❌ Gagal ambil lokasi: ${err.message}`;
     });
   }
 
   window.addEventListener("DOMContentLoaded", async () => {
     let wa = new URLSearchParams(window.location.search).get("wa") || "";
     wa = wa.replace(/^\+62/, "628").replace(/[^0-9]/g, "");
-    $("wa").value = wa;
     $("debug-info").textContent = `✅ WA dimuat: ${wa}`;
 
-    $("btn-absen").addEventListener("click", () => prosesAbsen(wa));
+    $("btn-lokasi").addEventListener("click", () => prosesAbsen(wa));
   });
 </script>
 
 </body>
 </html>
+
 
 
 
