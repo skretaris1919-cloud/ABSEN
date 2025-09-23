@@ -206,9 +206,37 @@ $("durasi").textContent = dataSantri.durasi || "—";
 $("status").textContent = dataSantri.status || "—";
 $("drs-status").textContent = dataSantri.drsStatus || "—";
 
-</script>
+window.addEventListener("DOMContentLoaded", async () => {
+  $("form-box").scrollIntoView({ behavior: "smooth" });
+
+  let wa = new URLSearchParams(window.location.search).get("wa") || "";
+  wa = wa.replace(/^\+62/, "628").replace(/[^0-9]/g, "");
+
+  $("wa").value = wa;
+  $("debug-info").textContent = `✅ WA berhasil dimuat dari URL: ${wa}`;
+
+  dataSantri = await ambilDataSantri(wa);
+
+  if (!dataSantri) {
+    $("nama").value = "❌ Tidak ditemukan atau waktu tidak valid";
+    return;
+  }
+
+  $("nama").value = dataSantri.nama || "—";
+  $("kegiatan").textContent = dataSantri.kegiatan || "—";
+  $("hari").textContent = dataSantri.hari || "—";
+  $("instansi").textContent = dataSantri.instansi || "—";
+  $("jabatan").textContent = dataSantri.jabatan || "—";
+  $("mulai").textContent = dataSantri.mulai || "—";
+  $("selesai").textContent = dataSantri.selesai || "—";
+  $("durasi").textContent = dataSantri.durasi || "—";
+  $("status").textContent = dataSantri.status || "—";
+  $("drs-status").textContent = dataSantri.drsStatus || "—";
+}); // ✅ tutup blok event listener
+</script> <!-- ✅ tutup blok script -->
 </body>
 </html>
+
 
 
 
