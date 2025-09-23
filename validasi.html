@@ -103,8 +103,8 @@
 
   fetch(url, {
     headers: {
-      apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybnFwZHZ0bmluenlxcXdobWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1NjU3OTQsImV4cCI6MjA3MzE0MTc5NH0.6u2P5ANnDV1237hEY73M0OHRDftwc3-G0JbRx44YcZc',
-      Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybnFwZHZ0bmluenlxcXdobWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1NjU3OTQsImV4cCI6MjA3MzE0MTc5NH0.6u2P5ANnDV1237hEY73M0OHRDftwc3-G0JbRx44YcZc',
+      apikey: 'YOUR_API_KEY',
+      Authorization: 'Bearer YOUR_API_KEY',
       Accept: 'application/json'
     }
   })
@@ -114,13 +114,11 @@
   })
   .then(data => {
     console.log("✅ Data ditemukan:", data);
-    // kamu bisa lanjut isi DOM di sini
   })
   .catch(err => {
     console.error("❌ Error fetch Supabase:", err.message);
   });
 
-  // 🔧 Utility DOM dan lokasi
   const $ = id => document.getElementById(id);
   const pesantrenLat = -7.036533;
   const pesantrenLng = 112.743574;
@@ -157,15 +155,15 @@
     const jamAwal = batasAwal.toTimeString().slice(0, 8);
     const jamSekarang = sekarang.toTimeString().slice(0, 8);
 
-const { data, error } = await supabase
-  .from("tb_jamker")
-  .select("*")
-  .ilike("wa", "62895403152519")
-  .ilike("hari", "SELASA")
-  .gte("mulai", "16:50:39")
-  .lte("mulai", "17:20:39")
-  .limit(1)
-  .single();
+    const { data, error } = await supabase
+      .from("tb_jamker")
+      .select("*")
+      .ilike("wa", wa)
+      .ilike("hari", hariValid)
+      .gte("mulai", jamAwal)
+      .lte("mulai", jamSekarang)
+      .limit(1)
+      .single();
 
     if (error || !data) return null;
 
@@ -193,6 +191,10 @@ const { data, error } = await supabase
     dataSantri = await ambilDataSantri(wa);
 
     if (!dataSantri) {
+      $("nama").value = "❌ Tidak ditemukan atau waktu tidak valid";
+      return;
+    }
+
     $("nama").value = dataSantri.nama || "—";
     $("kegiatan").textContent = dataSantri.kegiatan || "—";
     $("hari").textContent = dataSantri.hari || "—";
@@ -205,9 +207,9 @@ const { data, error } = await supabase
     $("drs-status").textContent = dataSantri.drsStatus || "—";
   });
 </script>
-
 </body>
 </html>
+
 
 
 
