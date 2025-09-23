@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <title>Validasi Jam Kerja</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" href="data:,"> <!-- Hindari error favicon 404 -->
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -138,7 +137,7 @@
     const hariValid = (hariMap[hariSekarang] || hariSekarang).toUpperCase();
 
     const sekarang = new Date();
-    const batasAwal = new Date(sekarang.getTime() - 30 * 60 * 1000);
+    const batasAwal = new Date(sekarang.getTime() - 30 * 60 * 1000); // 30 menit sebelum sekarang
     const jamAwal = batasAwal.toTimeString().slice(0, 8);
     const jamSekarang = sekarang.toTimeString().slice(0, 8);
 
@@ -172,7 +171,7 @@
   }
 
   window.addEventListener("DOMContentLoaded", async () => {
-    $("form-box").scrollIntoView({ behavior: "smooth" });
+    document.getElementById("form-box").scrollIntoView({ behavior: "smooth" });
 
     let wa = new URLSearchParams(window.location.search).get("wa") || "";
     wa = wa.replace(/^\+62/, "628").replace(/[^0-9]/g, "");
@@ -228,7 +227,7 @@
       const tanggal = new Date().toISOString().slice(0, 10);
       const jam = new Date().toTimeString().slice(0, 8);
 
-      const { data: cek } = await supabase
+      const { data: cek, error: errCek } = await supabase
         .from("tb_absen")
         .select("id")
         .ilike("no_id", dataSantri.no_id)
@@ -276,13 +275,3 @@
 
 </body>
 </html>
-
-</body>
-</html>
-
-
-
-
-
-
-
