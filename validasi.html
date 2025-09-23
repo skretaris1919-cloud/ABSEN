@@ -102,13 +102,11 @@
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-fetch(url, {
-  headers: {
-    "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybnFwZHZ0bmluenlxcXdobWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1NjU3OTQsImV4cCI6MjA3MzE0MTc5NH0.6u2P5ANnDV1237hEY73M0OHRDftwc3-G0JbRx44YcZc",
-    "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybnFwZHZ0bmluenlxcXdobWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1NjU3OTQsImV4cCI6MjA3MzE0MTc5NH0.6u2P5ANnDV1237hEY73M0OHRDftwc3-G0JbRx44YcZc",
-    "Accept": "application/json"
-  }
-})
+  const supabase = createClient(
+    'https://brnqpdvtninzyqqwhmfj.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybnFwZHZ0bmluenlxcXdobWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1NjU3OTQsImV4cCI6MjA3MzE0MTc5NH0.6u2P5ANnDV1237hEY73M0OHRDftwc3-G0JbRx44YcZc'
+  );
+
   const $ = id => document.getElementById(id);
   const pesantrenLat = -7.036533;
   const pesantrenLng = 112.743574;
@@ -143,15 +141,15 @@ fetch(url, {
     const jamAwal = batasAwal.toTimeString().slice(0, 8);
     const jamSekarang = sekarang.toTimeString().slice(0, 8);
 
-const { data, error } = await supabase
-  .from("tb_jamker")
-  .select("*")
-  .ilike("wa", `%${wa}%`)
-  .ilike("hari", `%${hariValid}%`)
-  .gte("mulai", jamAwal)
-  .lte("mulai", jamSekarang)
-  .limit(1)
-  .single();
+    const { data, error } = await supabase
+      .from("tb_jamker")
+      .select("*")
+      .ilike("wa", `%${wa}%`)
+      .ilike("hari", `%${hariValid}%`)
+      .gte("mulai", jamAwal)
+      .lte("mulai", jamSekarang)
+      .limit(1)
+      .single();
 
     if (error || !data) {
       $("debug-info").textContent += `\n❌ Tidak ditemukan: ${error?.message || 'Data kosong'}`;
@@ -170,7 +168,7 @@ const { data, error } = await supabase
     return { ...data, status, drsStatus };
   }
 
-   window.addEventListener("DOMContentLoaded", async () => {
+  window.addEventListener("DOMContentLoaded", async () => {
     $("form-box").scrollIntoView({ behavior: "smooth" });
 
     let wa = new URLSearchParams(window.location.search).get("wa") || "";
@@ -202,6 +200,7 @@ const { data, error } = await supabase
 
 </body>
 </html>
+
 
 
 
