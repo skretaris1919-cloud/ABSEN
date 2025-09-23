@@ -1,4 +1,3 @@
-<!-- ✅ Versi Lengkap Validasi Jam Kerja -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -99,25 +98,12 @@
 </div>
 
 <script type="module">
-  const url = `https://brnqpdvtninzyqqwhmfj.supabase.co/rest/v1/tb_jamker?select=*&wa=ilike.62895403152519&hari=ilike.SELASA&and=(mulai.gte.16:52:03,mulai.lte.17:22:03)&limit=1`;
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-  fetch(url, {
-    headers: {
-      apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybnFwZHZ0bmluenlxcXdobWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1NjU3OTQsImV4cCI6MjA3MzE0MTc5NH0.6u2P5ANnDV1237hEY73M0OHRDftwc3-G0JbRx44YcZc',
-      Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybnFwZHZ0bmluenlxcXdobWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1NjU3OTQsImV4cCI6MjA3MzE0MTc5NH0.6u2P5ANnDV1237hEY73M0OHRDftwc3-G0JbRx44YcZc',
-      Accept: 'application/json'
-    }
-  })
-  .then(res => {
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.json();
-  })
-  .then(data => {
-    console.log("✅ Data ditemukan:", data);
-  })
-  .catch(err => {
-    console.error("❌ Error fetch Supabase:", err.message);
-  });
+  const supabase = createClient(
+    'https://brnqpdvtninzyqqwhmfj.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybnFwZHZ0bmluenlxcXdobWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1NjU3OTQsImV4cCI6MjA3MzE0MTc5NH0.6u2P5ANnDV1237hEY73M0OHRDftwc3-G0JbRx44YcZc'
+  );
 
   const $ = id => document.getElementById(id);
   const pesantrenLat = -7.036533;
@@ -130,10 +116,10 @@
     const toRad = deg => deg * Math.PI / 180;
     const dLat = toRad(lat2 - lat1);
     const dLng = toRad(lng2 - lng1);
-    const a = Math.sin(dLat / 2) ** 2 +
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
               Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-              Math.sin(dLng / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+              Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return R * c;
   }
 
@@ -151,7 +137,7 @@
     const hariValid = (hariMap[hariSekarang] || hariSekarang).toUpperCase();
 
     const sekarang = new Date();
-    const batasAwal = new Date(sekarang.getTime() - 30 * 60 * 1000);
+    const batasAwal = new Date(sekarang.getTime() - 30 * 60 * 1000); // 30 menit sebelum sekarang
     const jamAwal = batasAwal.toTimeString().slice(0, 8);
     const jamSekarang = sekarang.toTimeString().slice(0, 8);
 
@@ -171,78 +157,121 @@
     const selisihMs = mulai - sekarang;
 
     let status = "—";
-    if (Math.abs(selisihMs) <= 5 * 60 * 1000) status = "Pas";
-    else if (selisihMs < 0) status = "Telat";
-    else status = "Maju";
+    if (Math.abs(selisihMs) <= 5 * 60 * 1000) {
+      status = "Pas";
+    } else if (selisihMs < 0) {
+      status = "Telat";
+    } else {
+      status = "Maju";
+    }
 
     const drsStatus = formatDurasi(selisihMs);
+
     return { ...data, status, drsStatus };
   }
 
   window.addEventListener("DOMContentLoaded", async () => {
-    $("form-box").scrollIntoView({ behavior: "smooth" });
+    document.getElementById("form-box").scrollIntoView({ behavior: "smooth" });
 
     let wa = new URLSearchParams(window.location.search).get("wa") || "";
     wa = wa.replace(/^\+62/, "628").replace(/[^0-9]/g, "");
 
-    $("wa").value = wa;
-    $("debug-info").textContent = `✅ WA berhasil dimuat dari URL: ${wa}`;
+    const waInput = $("wa");
+    if (waInput) {
+      waInput.value = wa;
+      $("debug-info").textContent = `✅ WA berhasil dimuat dari URL: ${wa}`;
+    } else {
+      $("debug-info").textContent = `❌ Input WA tidak ditemukan di DOM. Pastikan id="wa" ada.`;
+    }
 
     dataSantri = await ambilDataSantri(wa);
 
-if (!dataSantri) {
-  $("nama").value = "❌ Tidak ditemukan atau waktu tidak valid";
-  return;
-}
+    if (!dataSantri) {
+      $("nama").value = "❌ Tidak ditemukan atau waktu tidak valid";
+      return;
+    }
 
-$("nama").value = dataSantri.nama || "—";
-$("kegiatan").textContent = dataSantri.kegiatan || "—";
-$("hari").textContent = dataSantri.hari || "—";
-$("instansi").textContent = dataSantri.instansi || "—";
-$("jabatan").textContent = dataSantri.jabatan || "—";
-$("mulai").textContent = dataSantri.mulai || "—";
-$("selesai").textContent = dataSantri.selesai || "—";
-$("durasi").textContent = dataSantri.durasi || "—";
-$("status").textContent = dataSantri.status || "—";
-$("drs-status").textContent = dataSantri.drsStatus || "—";
+    $("nama").value = dataSantri.nama || "—";
+    $("kegiatan").textContent = dataSantri.kegiatan || "—";
+    $("hari").textContent = dataSantri.hari || "—";
+    $("instansi").textContent = dataSantri.instansi || "—";
+    $("jabatan").textContent = dataSantri.jabatan || "—";
+    $("mulai").textContent = dataSantri.mulai || "—";
+    $("selesai").textContent = dataSantri.selesai || "—";
+    $("durasi").textContent = dataSantri.durasi || "—";
+    $("status").textContent = dataSantri.status || "—";
+    $("drs-status").textContent = dataSantri.drsStatus || "—";
+  });
 
-window.addEventListener("DOMContentLoaded", async () => {
-  $("form-box").scrollIntoView({ behavior: "smooth" });
+  $("btn-lokasi").addEventListener("click", async () => {
+    if (!navigator.geolocation) {
+      $("lokasi-status").textContent = "❌ Browser tidak mendukung pelacakan lokasi.";
+      return;
+    }
 
-  let wa = new URLSearchParams(window.location.search).get("wa") || "";
-  wa = wa.replace(/^\+62/, "628").replace(/[^0-9]/g, "");
+    $("lokasi-status").textContent = "⏳ Mengambil lokasi...";
 
-  $("wa").value = wa;
-  $("debug-info").textContent = `✅ WA berhasil dimuat dari URL: ${wa}`;
+    navigator.geolocation.getCurrentPosition(async pos => {
+      const userLat = pos.coords.latitude;
+      const userLng = pos.coords.longitude;
+      const akurasi = pos.coords.accuracy;
+      const jarak = hitungJarak(userLat, userLng, pesantrenLat, pesantrenLng);
 
-  dataSantri = await ambilDataSantri(wa);
+      $("debug-info").innerHTML += `\n📍 Lokasi GPS: ${userLat}, ${userLng}\n📏 Jarak ke titik: ${jarak.toFixed(2)} meter\n📍 Akurasi GPS: ${akurasi.toFixed(2)} meter`;
 
-  if (!dataSantri) {
-    $("nama").value = "❌ Tidak ditemukan atau waktu tidak valid";
-    return;
-  }
+      if (jarak > radiusAman || akurasi > 1000) {
+        $("lokasi-status").textContent = "❌ Anda sedang di luar titik koordinat Pesantren Al Falah Kepang.";
+        return;
+      }
 
-  $("nama").value = dataSantri.nama || "—";
-  $("kegiatan").textContent = dataSantri.kegiatan || "—";
-  $("hari").textContent = dataSantri.hari || "—";
-  $("instansi").textContent = dataSantri.instansi || "—";
-  $("jabatan").textContent = dataSantri.jabatan || "—";
-  $("mulai").textContent = dataSantri.mulai || "—";
-  $("selesai").textContent = dataSantri.selesai || "—";
-  $("durasi").textContent = dataSantri.durasi || "—";
-  $("status").textContent = dataSantri.status || "—";
-  $("drs-status").textContent = dataSantri.drsStatus || "—";
-}); // ✅ tutup blok event listener
-</script> <!-- ✅ tutup blok script -->
+      const tanggal = new Date().toISOString().slice(0, 10);
+      const jam = new Date().toTimeString().slice(0, 8);
+
+      const { data: cek, error: errCek } = await supabase
+        .from("tb_absen")
+        .select("id")
+        .ilike("no_id", dataSantri.no_id)
+        .ilike("tanggal", tanggal)
+        .ilike("kegiatan", dataSantri.kegiatan)
+        .limit(1)
+        .single();
+
+      if (cek) {
+        $("lokasi-status").textContent = `⚠️ Anda sudah absen untuk kegiatan ${dataSantri.kegiatan}`;
+        return;
+      }
+
+      const { error: errSimpan } = await supabase
+        .from("tb_absen")
+        .insert([{
+          no_id: dataSantri.no_id,
+          nama: dataSantri.nama,
+          instansi: dataSantri.instansi,
+          jabatan: dataSantri.jabatan,
+          kegiatan: dataSantri.kegiatan,
+          hari: dataSantri.hari,
+          mulai: dataSantri.mulai,
+          selesai: dataSantri.selesai,
+          drs_kegiatan: dataSantri.durasi,
+          status: dataSantri.status,
+          drs_status: dataSantri.drsStatus,
+          tanggal: tanggal,
+          jam_absen: jam
+        }]);
+
+      if (errSimpan) {
+        $("lokasi-status").textContent = "❌ Gagal menyimpan absen.";
+        $("debug-info").textContent += `\n🛠️ Error simpan: ${errSimpan.message}`;
+      } else {
+        $("lokasi-status").textContent = `✅ Absen berhasil untuk kegiatan ${dataSantri.kegiatan}`;
+      }
+
+    }, err => {
+      $("lokasi-status").textContent = "❌ Gagal mengambil lokasi: " + err.message;
+      $("debug-info").textContent += `\n🛠️ Geolocation error: ${err.message}`;
+    });
+  });
+</script>
+
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
