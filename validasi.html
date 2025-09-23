@@ -98,184 +98,190 @@
 </div>
 
 <script>
-  const $ = id => document.getElementById(id);
-  const supabaseHeaders = {
-    apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybnFwZHZ0bmluenlxcXdobWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1NjU3OTQsImV4cCI6MjA3MzE0MTc5NH0.6u2P5ANnDV1237hEY73M0OHRDftwc3-G0JbRx44YcZc",
-    Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJybnFwZHZ0bmluenlxcXdobWZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1NjU3OTQsImV4cCI6MjA3MzE0MTc5NH0.6u2P5ANnDV1237hEY73M0OHRDftwc3-G0JbRx44YcZc",
-    "Content-Type": "application/json"
-  };
+<script>
+// 🔄 BARU: Validasi waktu kegiatan secara numerik agar tidak error
+const $ = id => document.getElementById(id);
+const supabaseHeaders = {
+  apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "Content-Type": "application/json"
+};
 
-  const wa = new URLSearchParams(window.location.search).get("wa") || "";
-  const hariMap = { "MINGGU": "AHAD", "JUMAT": "JUM'AT" };
-  const hariSekarang = new Intl.DateTimeFormat("id-ID", { weekday: "long" }).format(new Date()).toUpperCase();
-  const hariValid = (hariMap[hariSekarang] || hariSekarang).toUpperCase();
-  $("wa").value = wa;
+const wa = new URLSearchParams(window.location.search).get("wa") || "";
+const hariMap = { "MINGGU": "AHAD", "JUMAT": "JUM'AT" };
+const hariSekarang = new Intl.DateTimeFormat("id-ID", { weekday: "long" }).format(new Date()).toUpperCase();
+const hariValid = (hariMap[hariSekarang] || hariSekarang).toUpperCase();
+$("wa").value = wa;
 
-  let dataSantri = null;
+let dataSantri = null;
 
-  const sekarang = new Date();
-  const batas30MenitLalu = new Date(sekarang.getTime() - 30 * 60 * 1000);
-  const jamBatas = batas30MenitLalu.toTimeString().slice(0, 8);
+const sekarang = new Date();
+const batas30MenitLalu = new Date(sekarang.getTime() - 30 * 60 * 1000);
+const jamBatas = batas30MenitLalu.toTimeString().slice(0, 8);
 
-  const url = `https://brnqpdvtninzyqqwhmfj.supabase.co/rest/v1/tb_jamker?select=*&wa=ilike.${wa}&hari=ilike.${hariValid}&mulai=gte.${jamBatas}&limit=1`;
+const url = `https://brnqpdvtninzyqqwhmfj.supabase.co/rest/v1/tb_jamker?select=*&wa=ilike.${wa}&hari=ilike.${hariValid}&order=mulai.asc`;
 
-  $("debug-info").textContent = `⏳ Filter waktu aktif: mulai >= ${jamBatas}`;
+$("debug-info").textContent = `⏳ Filter waktu aktif: mulai >= ${jamBatas}`;
 
-  fetch(url, {
-    method: "GET",
-    headers: supabaseHeaders
+fetch(url, { method: "GET", headers: supabaseHeaders })
+  .then(res => {
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
   })
- .then(data => {
-  const sekarang = new Date();
-  const batas30MenitLalu = new Date(sekarang.getTime() - 30 * 60 * 1000);
+  .then(data => {
+    if (!Array.isArray(data)) throw new Error("Data bukan array");
 
-  $("debug-info").textContent = `⏳ Filter waktu aktif: mulai >= ${batas30MenitLalu.toTimeString().slice(0, 8)}`;
+    const dataValid = data.find(item => {
+      const mulaiDate = new Date(`${sekarang.toDateString()} ${item.mulai}`);
+      return mulaiDate >= batas30MenitLalu;
+    });
 
-  const dataValid = data.find(item => {
-    const mulaiDate = new Date(`${sekarang.toDateString()} ${item.mulai}`);
-    return mulaiDate >= batas30MenitLalu;
-  });
-
-  if (!dataValid) {
-    $("nama").value = "❌ Kegiatan tidak ditemukan";
-    $("kegiatan").textContent = "—";
-    $("hari").textContent = hariValid;
-    $("instansi").textContent = "—";
-    $("jabatan").textContent = "—";
-    $("mulai").textContent = "—";
-    $("selesai").textContent = "—";
-    $("durasi").textContent = "—";
-    $("status").textContent = "❌ Terlampaui";
-    $("drs-status").textContent = "Sudah lewat lebih dari 30 menit";
-    $("debug-info").textContent += `\n⚠️ Tidak ada kegiatan ditemukan untuk hari ${hariValid} yang masih aktif. Kemungkinan besar jam sudah terlampaui.`;
-    return;
-  }
-
-  const jamker = dataValid;
-  dataSantri = jamker;
-
-  const mulai = new Date(`${sekarang.toDateString()} ${jamker.mulai}`);
-  const selisihMs = mulai - sekarang;
-
-  let status = "—";
-  if (Math.abs(selisihMs) <= 5 * 60 * 1000) {
-    status = "Pas";
-  } else if (selisihMs < 0) {
-    status = "Telat";
-  } else {
-    status = "Maju";
-  }
-
-  const formatDurasi = ms => {
-    const totalSec = Math.abs(Math.floor(ms / 1000));
-    const jam = Math.floor(totalSec / 3600);
-    const menit = Math.floor((totalSec % 3600) / 60);
-    const detik = totalSec % 60;
-    return `${jam.toString().padStart(2,'0')} Jam ${menit.toString().padStart(2,'0')} Menit ${detik.toString().padStart(2,'0')} Detik`;
-  };
-
-  const drsStatus = formatDurasi(selisihMs);
-
-  $("nama").value = jamker.nama || "—";
-  $("kegiatan").textContent = jamker.kegiatan || "—";
-  $("hari").textContent = jamker.hari || "—";
-  $("instansi").textContent = jamker.instansi || "—";
-  $("jabatan").textContent = jamker.jabatan || "—";
-  $("mulai").textContent = jamker.mulai || "—";
-  $("selesai").textContent = jamker.selesai || "—";
-  $("durasi").textContent = jamker.durasi || "—";
-  $("status").textContent = status;
-  $("drs-status").textContent = drsStatus;
-  $("debug-info").textContent += `\n✅ Data berhasil difilter dan dimuat untuk hari ${hariValid}`;
-})
-  const pesantrenLat = -7.037695;
-  const pesantrenLng = 112.747255;
-  const radiusAman = 120;
-
-  function hitungJarak(lat1, lng1, lat2, lng2) {
-    const R = 6371e3;
-    const toRad = deg => deg * Math.PI / 180;
-    const dLat = toRad(lat2 - lat1);
-    const dLng = toRad(lng2 - lng1);
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-              Math.sin(dLng/2) * Math.sin(dLng/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  }
-
-  $("btn-lokasi").addEventListener("click", async () => {
-    if (!navigator.geolocation) {
-      $("lokasi-status").textContent = "❌ Browser tidak mendukung pelacakan lokasi.";
+    if (!dataValid) {
+      $("nama").value = "❌ Kegiatan tidak ditemukan";
+      $("kegiatan").textContent = "—";
+      $("hari").textContent = hariValid;
+      $("instansi").textContent = "—";
+      $("jabatan").textContent = "—";
+      $("mulai").textContent = "—";
+      $("selesai").textContent = "—";
+      $("durasi").textContent = "—";
+      $("status").textContent = "❌ Terlampaui";
+      $("drs-status").textContent = "Sudah lewat lebih dari 30 menit";
+      $("debug-info").textContent += `\n⚠️ Tidak ada kegiatan ditemukan untuk hari ${hariValid} yang masih aktif.`;
       return;
     }
 
-    $("lokasi-status").textContent = "⏳ Mengambil lokasi...";
+    const jamker = dataValid;
+    dataSantri = jamker;
 
-    navigator.geolocation.getCurrentPosition(async pos => {
-      const userLat = pos.coords.latitude;
-      const userLng = pos.coords.longitude;
-      const akurasi = pos.coords.accuracy;
-      const jarak = hitungJarak(userLat, userLng, pesantrenLat, pesantrenLng);
+    const mulai = new Date(`${sekarang.toDateString()} ${jamker.mulai}`);
+    const selisihMs = mulai - sekarang;
 
-      $("debug-info").textContent += `\n📍 Lokasi: ${userLat}, ${userLng}\n📏 Jarak: ${jarak.toFixed(2)} m\n🎯 Akurasi: ${akurasi.toFixed(2)} m`;
+    let status = "—";
+    if (Math.abs(selisihMs) <= 5 * 60 * 1000) {
+      status = "Pas";
+    } else if (selisihMs < 0) {
+      status = "Telat";
+    } else {
+      status = "Maju";
+    }
 
-      if (jarak > radiusAman || akurasi > 1000) {
-        $("lokasi-status").textContent = "❌ Di luar radius aman Pesantren.";
-        return;
-      }
+    const formatDurasi = ms => {
+      const totalSec = Math.abs(Math.floor(ms / 1000));
+      const jam = Math.floor(totalSec / 3600);
+      const menit = Math.floor((totalSec % 3600) / 60);
+      const detik = totalSec % 60;
+      return `${jam.toString().padStart(2,'0')} Jam ${menit.toString().padStart(2,'0')} Menit ${detik.toString().padStart(2,'0')} Detik`;
+    };
 
-      const tanggal = new Date().toISOString().slice(0, 10);
-      const jam = new Date().toTimeString().slice(0, 8);
+    const drsStatus = formatDurasi(selisihMs);
 
-      const cekURL = `https://brnqpdvtninzyqqwhmfj.supabase.co/rest/v1/tb_absen?select=id&no_id=eq.${dataSantri.no_id}&tanggal=eq.${tanggal}&kegiatan=eq.${dataSantri.kegiatan}&limit=1`;
-
-      const cekRes = await fetch(cekURL, { headers: supabaseHeaders });
-      const cekData = await cekRes.json();
-      if (cekData.length > 0) {
-        $("lokasi-status").textContent = "⚠️ Anda sudah absen hari ini.";
-        return;
-      }
-
-      const simpanURL = "https://brnqpdvtninzyqqwhmfj.supabase.co/rest/v1/tb_absen";
-      const payload = [{
-        no_id: dataSantri.no_id,
-        nama: dataSantri.nama,
-        instansi: dataSantri.instansi,
-        jabatan: dataSantri.jabatan,
-        kegiatan: dataSantri.kegiatan,
-        hari: dataSantri.hari,
-        mulai: dataSantri.mulai,
-        selesai: dataSantri.selesai,
-        drs_kegiatan: $("durasi").textContent,
-        status: $("status").textContent,
-        drs_status: $("drs-status").textContent,
-        tanggal: tanggal,
-        jam_absen: jam
-      }];
-
-      const simpanRes = await fetch(simpanURL, {
-        method: "POST",
-        headers: supabaseHeaders,
-        body: JSON.stringify(payload)
-      });
-
-      if (simpanRes.ok) {
-        $("lokasi-status").textContent = "✅ Absen berhasil disimpan.";
-      } else {
-        const err = await simpanRes.json();
-        $("lokasi-status").textContent = "❌ Gagal simpan absen.";
-        $("debug-info").textContent += `\n🛠️ Error simpan: ${err.message}`;
-      }
-
-    }, err => {
-      $("lokasi-status").textContent = "❌ Gagal ambil lokasi: " + err.message;
-      $("debug-info").textContent += `\n🛠️ Geolocation error: ${err.message}`;
-    });
+    $("nama").value = jamker.nama || "—";
+    $("kegiatan").textContent = jamker.kegiatan || "—";
+    $("hari").textContent = jamker.hari || "—";
+    $("instansi").textContent = jamker.instansi || "—";
+    $("jabatan").textContent = jamker.jabatan || "—";
+    $("mulai").textContent = jamker.mulai || "—";
+    $("selesai").textContent = jamker.selesai || "—";
+    $("durasi").textContent = jamker.durasi || "—";
+    $("status").textContent = status;
+    $("drs-status").textContent = drsStatus;
+    $("debug-info").textContent += `\n✅ Data berhasil dimuat untuk hari ${hariValid}`;
+  })
+  .catch(err => {
+    $("debug-info").textContent = `❌ Gagal ambil data: ${err.message}`;
+    console.error("❌ Error:", err);
   });
+
+// 🔐 Validasi Lokasi & Simpan Absen
+const pesantrenLat = -7.037695;
+const pesantrenLng = 112.747255;
+const radiusAman = 120;
+
+function hitungJarak(lat1, lng1, lat2, lng2) {
+  const R = 6371e3;
+  const toRad = deg => deg * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+$("btn-lokasi").addEventListener("click", async () => {
+  if (!navigator.geolocation) {
+    $("lokasi-status").textContent = "❌ Browser tidak mendukung pelacakan lokasi.";
+    return;
+  }
+
+  $("lokasi-status").textContent = "⏳ Mengambil lokasi...";
+
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const userLat = pos.coords.latitude;
+    const userLng = pos.coords.longitude;
+    const akurasi = pos.coords.accuracy;
+    const jarak = hitungJarak(userLat, userLng, pesantrenLat, pesantrenLng);
+
+    $("debug-info").textContent += `\n📍 Lokasi: ${userLat}, ${userLng}\n📏 Jarak: ${jarak.toFixed(2)} m\n🎯 Akurasi: ${akurasi.toFixed(2)} m`;
+
+    if (jarak > radiusAman || akurasi > 1000) {
+      $("lokasi-status").textContent = "❌ Di luar radius aman Pesantren.";
+      return;
+    }
+
+    const tanggal = new Date().toISOString().slice(0, 10);
+    const jam = new Date().toTimeString().slice(0, 8);
+
+    const cekURL = `https://brnqpdvtninzyqqwhmfj.supabase.co/rest/v1/tb_absen?select=id&no_id=eq.${dataSantri.no_id}&tanggal=eq.${tanggal}&kegiatan=eq.${dataSantri.kegiatan}&limit=1`;
+
+    const cekRes = await fetch(cekURL, { headers: supabaseHeaders });
+    const cekData = await cekRes.json();
+    if (cekData.length > 0) {
+      $("lokasi-status").textContent = "⚠️ Anda sudah absen hari ini.";
+      return;
+    }
+
+    const simpanURL = "https://brnqpdvtninzyqqwhmfj.supabase.co/rest/v1/tb_absen";
+    const payload = [{
+      no_id: dataSantri.no_id,
+      nama: dataSantri.nama,
+      instansi: dataSantri.instansi,
+      jabatan: dataSantri.jabatan,
+      kegiatan: dataSantri.kegiatan,
+      hari: dataSantri.hari,
+      mulai: dataSantri.mulai,
+      selesai: dataSantri.selesai,
+      drs_kegiatan: $("durasi").textContent,
+      status: $("status").textContent,
+      drs_status: $("drs-status").textContent,
+      tanggal: tanggal,
+      jam_absen: jam
+    }];
+
+    const simpanRes = await fetch(simpanURL, {
+      method: "POST",
+      headers: supabaseHeaders,
+      body: JSON.stringify(payload)
+    });
+
+    if (simpanRes.ok) {
+      $("lokasi-status").textContent = "✅ Absen berhasil disimpan.";
+    } else {
+      const err = await simpanRes.json();
+      $("lokasi-status").textContent = "❌ Gagal simpan absen.";
+      $("debug-info").textContent += `\n🛠️ Error simpan: ${err.message || JSON.stringify(err)}`;
+          }
+  }, err => {
+    $("lokasi-status").textContent = "❌ Gagal ambil lokasi: " + err.message;
+    $("debug-info").textContent += `\n🛠️ Geolocation error: ${err.message}`;
+  });
+});
 </script>
 </body>
 </html>
+
 
 
 
